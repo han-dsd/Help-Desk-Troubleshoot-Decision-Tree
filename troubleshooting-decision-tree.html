@@ -1,0 +1,2074 @@
+<!-- Made with <3 | github.com/han-dsd -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Troubleshooting Decision Tree</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --bg: #0a0e14;
+    --surface: #111720;
+    --surface2: #161e2c;
+    --border: #1e2d42;
+    --accent: #00d4aa;
+    --accent2: #0084ff;
+    --warn: #ffb800;
+    --text: #c8d8e8;
+    --muted: #5a7a99;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header { margin-bottom: 48px; }
+
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-size: clamp(26px, 5vw, 40px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  /* home screen grid */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .cat-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 16px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .cat-btn:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+    color: #fff;
+  }
+
+  .cat-icon { font-size: 18px; flex-shrink: 0; }
+
+  .home-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* breadcrumb */
+  .trail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 28px;
+    min-height: 28px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .trail-item { color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .trail-item::after { content: '›'; color: var(--border); }
+  .trail-item:last-child { color: var(--accent); }
+  .trail-item:last-child::after { display: none; }
+
+  /* question + resolution cards share a lot */
+  .card, .resolution {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.25s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* colored top bar */
+  .card::before,
+  .resolution.success::before,
+  .resolution.escalate::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .resolution.success::before { background: var(--accent); }
+  .resolution.escalate::before { background: var(--warn); }
+
+  .step-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .question {
+    font-size: clamp(17px, 3vw, 22px);
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .detail {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .answers { display: flex; flex-direction: column; gap: 10px; }
+
+  .ans-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 14px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 14px;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ans-btn:hover {
+    border-color: var(--accent2);
+    background: rgba(0, 132, 255, 0.08);
+    color: #fff;
+    transform: translateX(4px);
+  }
+
+  .ans-arrow {
+    font-size: 16px;
+    opacity: 0.4;
+    transition: opacity 0.15s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .ans-btn:hover .ans-arrow { opacity: 1; transform: translateX(3px); }
+
+  /* resolution badges */
+  .res-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 3px;
+    margin-bottom: 18px;
+  }
+
+  .res-badge.fix {
+    background: rgba(0, 212, 170, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(0, 212, 170, 0.25);
+  }
+  .res-badge.esc {
+    background: rgba(255, 184, 0, 0.12);
+    color: var(--warn);
+    border: 1px solid rgba(255, 184, 0, 0.25);
+  }
+
+  .res-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+
+  .steps-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .steps-list li {
+    display: flex;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(0, 212, 170, 0.1);
+    border: 1px solid rgba(0, 212, 170, 0.2);
+    border-radius: 3px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .cmd-block {
+    background: #060a10;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+  .cmd-block .cmd-line::before { content: '> '; color: var(--muted); }
+
+  /* bottom nav buttons */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+    border: 1px solid;
+  }
+
+  .ctrl-btn.restart,
+  .ctrl-btn.back {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .ctrl-btn.restart:hover { border-color: var(--muted); color: var(--text); }
+  .ctrl-btn.back:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .ctrl-btn.ticket {
+    background: rgba(0, 212, 170, 0.1);
+    border-color: rgba(0, 212, 170, 0.4);
+    color: var(--accent);
+    margin-left: auto;
+  }
+  .ctrl-btn.ticket:hover {
+    background: rgba(0, 212, 170, 0.18);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ticket modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 9, 14, 0.88);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.18s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideIn 0.22s ease;
+  }
+
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px 10px 0 0;
+  }
+
+  .modal-header {
+    padding: 28px 28px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+  }
+
+  .modal-title-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .modal-title { font-size: 20px; font-weight: 700; color: #fff; }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: #ff4757; color: #ff4757; }
+
+  .modal-body { padding: 0 28px 28px; }
+
+  .field { margin-bottom: 18px; }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus { border-color: var(--accent2); }
+
+  .field textarea { resize: vertical; min-height: 90px; line-height: 1.5; font-weight: 300; }
+  .field select option { background: var(--surface2); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .modal-footer { display: flex; gap: 10px; padding-top: 8px; }
+
+  .submit-btn {
+    flex: 1;
+    padding: 12px;
+    background: var(--accent);
+    border: none;
+    border-radius: 5px;
+    color: #0a0e14;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+  .submit-btn:hover { background: #00f0c0; }
+
+  .cancel-btn {
+    padding: 12px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cancel-btn:hover { border-color: var(--muted); color: var(--text); }
+
+  .ticket-success { text-align: center; padding: 16px 0 8px; }
+  .ticket-icon { font-size: 40px; margin-bottom: 14px; }
+  .ticket-id { font-family: var(--mono); font-size: 22px; color: var(--accent); margin-bottom: 10px; letter-spacing: 2px; }
+  .ticket-msg { font-size: 14px; color: var(--muted); margin-bottom: 24px; font-weight: 300; line-height: 1.6; }
+
+  .ticket-summary-box {
+    background: #060a10;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-align: left;
+    line-height: 1.9;
+    margin-bottom: 20px;
+  }
+  .ticket-summary-box span { color: var(--text); }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-tag">// Help Tool</div>
+    <h1>Troubleshooting <span>Decision Tree</span></h1>
+    <p class="subtitle">Step-by-step guided diagnostics for common support issues</p>
+  </header>
+  <div id="app"></div>
+</div>
+
+<!-- ticket modal -->
+<div id="ticket-modal" class="modal-overlay" style="display:none" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title-tag">// New Ticket</div>
+        <div class="modal-title">Submit a Support Ticket</div>
+      </div>
+      <button class="modal-close" onclick="closeTicketModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+
+// shorthand for getElementById
+const el = id => document.getElementById(id);
+
+const trees = {
+  internet: {
+    label: "🌐 No Internet",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "Can the user ping 127.0.0.1 (localhost)?",
+        detail: "Open CMD → type 'ping 127.0.0.1'. This tests if the network stack is functioning.",
+        answers: [
+          { text: "Yes — ping succeeds", next: "q2" },
+          { text: "No — request timed out", next: "r_reinstall_stack" }
+        ]
+      },
+      q2: {
+        q: "Is the network adapter enabled and showing in Device Manager?",
+        detail: "Check Control Panel → Network & Sharing Center, or Device Manager → Network Adapters.",
+        answers: [
+          { text: "Yes, adapter is enabled", next: "q3" },
+          { text: "No, adapter is disabled or missing", next: "r_enable_adapter" }
+        ]
+      },
+      q3: {
+        q: "Does the user have a valid IP address? (not 169.x.x.x)",
+        detail: "Run 'ipconfig' in CMD. A 169.254.x.x address means DHCP failed.",
+        answers: [
+          { text: "Yes — valid IP (e.g. 192.168.x.x)", next: "q4" },
+          { text: "No — showing 169.254.x.x (APIPA)", next: "r_dhcp" }
+        ]
+      },
+      q4: {
+        q: "Can the user ping the default gateway?",
+        detail: "Find the gateway via 'ipconfig', then ping it. Example: ping 192.168.1.1",
+        answers: [
+          { text: "Yes — gateway responds", next: "q5" },
+          { text: "No — gateway unreachable", next: "r_check_router" }
+        ]
+      },
+      q5: {
+        q: "Can the user ping an external IP? (e.g. 8.8.8.8)",
+        detail: "Pinging Google's DNS by IP bypasses DNS resolution to isolate the problem.",
+        answers: [
+          { text: "Yes — external IP responds", next: "r_dns" },
+          { text: "No — external ping fails", next: "r_isp" }
+        ]
+      },
+      r_reinstall_stack: {
+        type: "fix",
+        title: "Reinstall TCP/IP Stack",
+        steps: [
+          "Open CMD as Administrator",
+          "Run: netsh int ip reset",
+          "Run: netsh winsock reset",
+          "Restart the computer",
+          "Test connectivity again"
+        ],
+        cmds: ["netsh int ip reset", "netsh winsock reset"]
+      },
+      r_enable_adapter: {
+        type: "fix",
+        title: "Enable / Reinstall Network Adapter",
+        steps: [
+          "Open Device Manager (devmgmt.msc)",
+          "Expand Network Adapters",
+          "Right-click the adapter → Enable (if disabled)",
+          "If missing or has error: right-click → Update driver",
+          "If still failing: uninstall and reinstall driver from manufacturer site",
+          "Restart and recheck"
+        ],
+        cmds: ["devmgmt.msc"]
+      },
+      r_dhcp: {
+        type: "fix",
+        title: "Fix DHCP / IP Address Issue",
+        steps: [
+          "Open CMD as Administrator",
+          "Run: ipconfig /release then ipconfig /renew",
+          "If that fails, check that DHCP service is running (services.msc)",
+          "Verify the router/DHCP server is operational",
+          "As a test, set a static IP manually and retest"
+        ],
+        cmds: ["ipconfig /release", "ipconfig /renew", "services.msc"]
+      },
+      r_check_router: {
+        type: "escalate",
+        title: "Layer 2 / Router Issue",
+        steps: [
+          "Check all physical cable connections (PC → switch → router)",
+          "Try a different Ethernet port on the switch",
+          "Power cycle the router and switch (wait 30 sec)",
+          "Check if other devices on the same network have internet",
+          "If isolated to one port/switch: escalate to network team"
+        ]
+      },
+      r_dns: {
+        type: "fix",
+        title: "DNS Resolution Issue",
+        steps: [
+          "Open CMD and run: ipconfig /flushdns",
+          "Try changing DNS to 8.8.8.8 / 8.8.4.4 (Google DNS)",
+          "Network Settings → Adapter Properties → IPv4 → set DNS manually",
+          "Retry browsing. If resolved, DNS server may be faulty",
+          "Report the DNS issue to the network team"
+        ],
+        cmds: ["ipconfig /flushdns", "nslookup google.com"]
+      },
+      r_isp: {
+        type: "escalate",
+        title: "ISP / WAN Outage",
+        steps: [
+          "Check ISP status page or call ISP support line",
+          "Verify WAN light on router is active",
+          "Try rebooting the modem (not just the router)",
+          "Check if the outage affects the whole building or just one user",
+          "Log ticket and escalate to network team if building-wide"
+        ]
+      }
+    }
+  },
+
+  slow: {
+    label: "🐌 Slow Computer",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "Is the computer slow immediately after startup, or only after some time?",
+        detail: "This helps distinguish between startup resource issues and memory/thermal problems.",
+        answers: [
+          { text: "Slow right after boot", next: "q2" },
+          { text: "Gets slow over time", next: "q4" }
+        ]
+      },
+      q2: {
+        q: "Is CPU or RAM usage very high in Task Manager at startup?",
+        detail: "Open Task Manager (Ctrl+Shift+Esc) → Performance tab. Look for sustained 90%+ CPU or 90%+ RAM.",
+        answers: [
+          { text: "Yes — CPU or RAM maxed out", next: "q3" },
+          { text: "No — usage looks normal", next: "r_disk_slow" }
+        ]
+      },
+      q3: {
+        q: "Does Task Manager show a specific process consuming most resources?",
+        detail: "Sort by CPU% or Memory% in the Processes tab to find the culprit.",
+        answers: [
+          { text: "Yes — a specific process is the cause", next: "r_bad_process" },
+          { text: "No — many small processes adding up", next: "r_startup_items" }
+        ]
+      },
+      q4: {
+        q: "Does the system slow down under load (gaming, video, big files)?",
+        detail: "Thermal throttling causes slowdown under sustained load when a CPU overheats.",
+        answers: [
+          { text: "Yes — slows under heavy use", next: "r_thermal" },
+          { text: "No — slows even when idle", next: "r_memory_leak" }
+        ]
+      },
+      r_disk_slow: {
+        type: "fix",
+        title: "Slow HDD / Disk Issue",
+        steps: [
+          "Open Task Manager → Performance → Disk. Check for 100% disk usage",
+          "Run Check Disk: open CMD as Admin → chkdsk /f /r C:",
+          "Check if drive is nearly full (keep 15%+ free)",
+          "If HDD (not SSD): defragment via 'Optimize Drives'",
+          "Consider SSD upgrade if drive is old HDD"
+        ],
+        cmds: ["chkdsk /f /r C:", "winsat disk"]
+      },
+      r_bad_process: {
+        type: "fix",
+        title: "Rogue Process / Malware",
+        steps: [
+          "Note the process name from Task Manager",
+          "Search the process name online to verify legitimacy",
+          "If unknown/suspicious: run Windows Defender full scan",
+          "Run Malwarebytes (free version) as a second opinion",
+          "If confirmed malware: follow malware removal procedure"
+        ],
+        cmds: ["msconfig", "sfc /scannow"]
+      },
+      r_startup_items: {
+        type: "fix",
+        title: "Too Many Startup Programs",
+        steps: [
+          "Open Task Manager → Startup tab",
+          "Disable all non-essential startup items (right-click → Disable)",
+          "Key safe ones to keep: antivirus, audio/GPU drivers",
+          "Restart and re-test performance",
+          "Use 'msconfig' for additional startup/service control"
+        ],
+        cmds: ["taskmgr", "msconfig"]
+      },
+      r_thermal: {
+        type: "fix",
+        title: "Thermal Throttling",
+        steps: [
+          "Check CPU temps with HWMonitor or Core Temp (safe range: <85°C)",
+          "Shut down and clean dust from vents and fans with compressed air",
+          "Check that all fans are spinning",
+          "If laptop: use on a hard flat surface, not on fabric",
+          "If temps still high: thermal paste replacement may be needed — escalate"
+        ]
+      },
+      r_memory_leak: {
+        type: "fix",
+        title: "Possible Memory Leak / RAM Issue",
+        steps: [
+          "Open Resource Monitor → Memory tab, watch for climbing 'In Use' over time",
+          "Identify which process grows in memory without releasing",
+          "Restart that specific process/application as a workaround",
+          "Run Windows Memory Diagnostic: search 'mdsched' and schedule scan",
+          "If RAM tests fail: escalate for hardware replacement"
+        ],
+        cmds: ["mdsched.exe", "resmon"]
+      }
+    }
+  },
+
+  printer: {
+    label: "🖨️ Printer Issues",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "Is the printer powered on and showing a Ready state?",
+        detail: "Check the printer's display panel or status lights. Power or error indicators need to be resolved before anything else.",
+        answers: [
+          { text: "Yes — shows Ready", next: "q2" },
+          { text: "No — error, offline, or no power", next: "r_power" }
+        ]
+      },
+      q2: {
+        q: "Does the printer show as Online in Windows?",
+        detail: "Go to Settings → Printers & Scanners → click the printer. If it says 'Offline', that's the issue.",
+        answers: [
+          { text: "Yes — shows as Online", next: "q3" },
+          { text: "No — shows Offline", next: "r_offline" }
+        ]
+      },
+      q3: {
+        q: "Are there stuck jobs in the print queue?",
+        detail: "Open the printer → see if old jobs are stuck in the queue, especially ones showing as Deleting or Error.",
+        answers: [
+          { text: "Yes — stuck jobs in queue", next: "r_stuck_queue" },
+          { text: "No — queue is empty", next: "q4" }
+        ]
+      },
+      q4: {
+        q: "Is the printer connected via network or USB?",
+        answers: [
+          { text: "Network / Wi-Fi printer", next: "r_network_printer" },
+          { text: "USB directly to PC", next: "r_usb_printer" }
+        ]
+      },
+      r_power: {
+        type: "fix",
+        title: "Printer Power / Hardware Error",
+        steps: [
+          "Check power cable is firmly seated at both printer and wall",
+          "Power cycle the printer: hold power off 30 seconds, back on",
+          "Check for paper jams — clear any jammed paper gently",
+          "Check ink/toner: low or empty cartridge can cause error state",
+          "If error persists after these steps: escalate or contact vendor"
+        ]
+      },
+      r_offline: {
+        type: "fix",
+        title: "Set Printer Back Online",
+        steps: [
+          "Open Settings → Printers & Scanners → select the printer",
+          "Click 'Open queue' → Printer menu → uncheck 'Use Printer Offline'",
+          "If that's grayed out, restart the Print Spooler service",
+          "Run: net stop spooler → net start spooler in CMD (admin)",
+          "Delete and re-add the printer if it still shows offline"
+        ],
+        cmds: ["net stop spooler", "net start spooler"]
+      },
+      r_stuck_queue: {
+        type: "fix",
+        title: "Clear Stuck Print Queue",
+        steps: [
+          "Open CMD as Administrator",
+          "Run: net stop spooler",
+          "Navigate to: C:\\Windows\\System32\\spool\\PRINTERS",
+          "Delete all files inside (not the folder itself)",
+          "Run: net start spooler",
+          "Try printing again"
+        ],
+        cmds: ["net stop spooler", "net start spooler"]
+      },
+      r_network_printer: {
+        type: "fix",
+        title: "Network Printer Not Responding",
+        steps: [
+          "Ping the printer's IP address to confirm it's on the network",
+          "If no ping: check printer's Wi-Fi or Ethernet connection",
+          "Try accessing the printer's web interface (enter IP in browser)",
+          "Remove and re-add the printer using its IP address",
+          "Check if the correct driver is installed (match model exactly)",
+          "If only this user is affected: check user's firewall settings"
+        ],
+        cmds: ["ping [printer IP]"]
+      },
+      r_usb_printer: {
+        type: "fix",
+        title: "USB Printer Not Detected",
+        steps: [
+          "Try a different USB cable and a different USB port",
+          "Open Device Manager — check for unknown devices or errors under Printers",
+          "Uninstall the printer and driver completely",
+          "Download the latest driver from the manufacturer's website",
+          "Reinstall with printer connected and powered on",
+          "Restart and retest"
+        ],
+        cmds: ["devmgmt.msc", "printmanagement.msc"]
+      }
+    }
+  },
+
+  server: {
+    label: "🖥️ Server Login Issues",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "What type of server login is failing?",
+        answers: [
+          { text: "RDP (Remote Desktop)", next: "q2" },
+          { text: "SSH (Linux/remote shell)", next: "q5" },
+          { text: "Web-based admin panel (e.g. IIS, cPanel)", next: "q8" },
+          { text: "Local server console login", next: "q_local" }
+        ]
+      },
+
+      // RDP branch
+      q2: {
+        q: "What error appears when connecting via RDP?",
+        answers: [
+          { text: "Credentials not accepted / wrong password", next: "q3" },
+          { text: "Cannot connect — connection refused or timed out", next: "q_rdp_connect" },
+          { text: "User not allowed to use RDP", next: "r_rdp_permission" },
+          { text: "Certificate / security warning blocking connection", next: "r_rdp_cert" }
+        ]
+      },
+      q3: {
+        q: "Is the user logging in with domain credentials or a local account?",
+        detail: "Domain login format: DOMAIN\\username or username@domain.com. Local: .\\username or just username.",
+        answers: [
+          { text: "Domain credentials", next: "r_rdp_domain_creds" },
+          { text: "Local account", next: "r_rdp_local_creds" }
+        ]
+      },
+      q_rdp_connect: {
+        q: "Can you ping the server by hostname or IP?",
+        detail: "Run: ping [server IP or hostname] from CMD.",
+        answers: [
+          { text: "Yes — ping succeeds", next: "r_rdp_firewall" },
+          { text: "No — ping fails", next: "r_server_unreachable" }
+        ]
+      },
+      r_rdp_permission: {
+        type: "fix",
+        title: "User Lacks RDP Access Permission",
+        steps: [
+          "On the server: open System Properties → Remote tab",
+          "Click 'Select Users' under Remote Desktop",
+          "Add the user or their group (e.g. Domain Users, RDP Users)",
+          "Alternatively in AD: add user to the 'Remote Desktop Users' group",
+          "Confirm Remote Desktop is enabled on the server",
+          "Have user retry login"
+        ],
+        cmds: ["sysdm.cpl", "lusrmgr.msc"]
+      },
+      r_rdp_cert: {
+        type: "fix",
+        title: "RDP Certificate Warning",
+        steps: [
+          "If internal server: click 'Connect anyway' — self-signed certs are common internally",
+          "To permanently trust: export the cert and import into Trusted Root Authorities",
+          "If external server: verify you're connecting to the correct IP (not a MITM risk)",
+          "Check the certificate's CN matches the server hostname",
+          "For production servers: install a proper trusted SSL certificate"
+        ]
+      },
+      r_rdp_domain_creds: {
+        type: "fix",
+        title: "RDP Domain Credential Failure",
+        steps: [
+          "Verify format: use DOMAIN\\username (not just username)",
+          "Confirm password is not expired in Active Directory",
+          "Check if account is locked: open ADUC (dsa.msc) → find user → Account tab",
+          "Verify the server is joined to the domain: run 'systeminfo | findstr Domain'",
+          "Check domain controller is reachable from the server",
+          "Review Security event log on the server for error code (e.g. 4625)"
+        ],
+        cmds: ["dsa.msc", "eventvwr.msc", "nltest /dsgetdc:[domain]"]
+      },
+      r_rdp_local_creds: {
+        type: "fix",
+        title: "RDP Local Account Failure",
+        steps: [
+          "Use format: .\\username or SERVERNAME\\username to specify local account",
+          "Confirm the local account exists: open lusrmgr.msc on the server",
+          "Reset password if needed: net user [username] [newpassword] (admin CMD on server)",
+          "Verify account is not disabled or expired in Local Users & Groups",
+          "Confirm local account is in the Remote Desktop Users group"
+        ],
+        cmds: ["lusrmgr.msc", "net user [username] [newpassword]"]
+      },
+      r_rdp_firewall: {
+        type: "fix",
+        title: "RDP Port Blocked by Firewall",
+        steps: [
+          "RDP uses TCP port 3389 by default — verify it's open",
+          "On the server: check Windows Firewall allows RDP inbound",
+          "Run: netstat -an | findstr 3389 to confirm RDP is listening",
+          "Check network firewall / security group rules (especially in cloud environments)",
+          "If port was changed: find the custom port in registry: HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-TCP\\PortNumber",
+          "Test with: Test-NetConnection -ComputerName [IP] -Port 3389 in PowerShell"
+        ],
+        cmds: ["netstat -an | findstr 3389", "Test-NetConnection -ComputerName [IP] -Port 3389"]
+      },
+      r_server_unreachable: {
+        type: "escalate",
+        title: "Server Unreachable on Network",
+        steps: [
+          "Verify the server is powered on (check hypervisor console if virtual)",
+          "Check if the server's NIC is active and has a valid IP",
+          "Test from another machine on the same subnet",
+          "Check for network outage between client and server subnet",
+          "Review switch port / VLAN assignment for the server",
+          "Escalate to network/infrastructure team with IP, hostname, and symptoms"
+        ]
+      },
+
+      // SSH branch
+      q5: {
+        q: "What is the SSH error or symptom?",
+        answers: [
+          { text: "Permission denied (publickey) or password", next: "q6" },
+          { text: "Connection refused or timed out", next: "r_ssh_connect" },
+          { text: "Host key verification failed", next: "r_ssh_hostkey" },
+          { text: "Too many authentication failures", next: "r_ssh_auth_limit" }
+        ]
+      },
+      q6: {
+        q: "Is the server using password auth or SSH key authentication?",
+        answers: [
+          { text: "Password authentication", next: "r_ssh_password" },
+          { text: "SSH key (public/private key pair)", next: "r_ssh_key" }
+        ]
+      },
+      r_ssh_password: {
+        type: "fix",
+        title: "SSH Password Authentication Failure",
+        steps: [
+          "Confirm correct username — Linux is case-sensitive (root ≠ Root)",
+          "Verify password is correct; reset via console if needed",
+          "Check if PasswordAuthentication is enabled in /etc/ssh/sshd_config",
+          "If disabled: set PasswordAuthentication yes, then: sudo systemctl restart sshd",
+          "Check if the account is locked: sudo passwd -S [username]",
+          "Unlock if needed: sudo passwd -u [username]",
+          "Review /var/log/auth.log or /var/log/secure for specific error"
+        ],
+        cmds: ["sudo cat /etc/ssh/sshd_config | grep PasswordAuth", "sudo systemctl restart sshd", "sudo passwd -S [username]"]
+      },
+      r_ssh_key: {
+        type: "fix",
+        title: "SSH Key Authentication Failure",
+        steps: [
+          "Confirm you're using the correct private key: ssh -i /path/to/key user@host",
+          "Check key permissions — private key must be chmod 600, not world-readable",
+          "Verify the public key is in ~/.ssh/authorized_keys on the server",
+          "Check ~/.ssh directory permissions: must be chmod 700",
+          "Confirm the key algorithm is supported (ed25519 and RSA 4096 are safest)",
+          "Run ssh with -vvv flag for verbose debug output to pinpoint the issue"
+        ],
+        cmds: ["chmod 600 ~/.ssh/id_rsa", "ssh -vvv -i /path/to/key user@host"]
+      },
+      r_ssh_connect: {
+        type: "fix",
+        title: "SSH Connection Refused / Timeout",
+        steps: [
+          "Confirm SSH service is running: sudo systemctl status sshd",
+          "Check the port — default is 22, but may be customized in sshd_config",
+          "Verify firewall allows SSH: sudo ufw status or sudo firewall-cmd --list-all",
+          "For cloud VMs: check Security Group or NSG rules allow TCP 22 inbound",
+          "Test connectivity: nc -zv [IP] 22 or Test-NetConnection in PowerShell",
+          "If port 22 is blocked: check if an alternate port is configured"
+        ],
+        cmds: ["sudo systemctl status sshd", "sudo ufw status", "nc -zv [IP] 22"]
+      },
+      r_ssh_hostkey: {
+        type: "fix",
+        title: "SSH Host Key Verification Failed",
+        steps: [
+          "This occurs when the server's host key changed (OS reinstall, IP reuse, etc.)",
+          "If expected (e.g. you rebuilt the server): remove the old key",
+          "Run: ssh-keygen -R [hostname or IP]",
+          "Then reconnect — you'll be prompted to accept the new key",
+          "If unexpected: investigate — could indicate a MITM or DNS spoofing attack",
+          "Verify the server's fingerprint out-of-band before accepting"
+        ],
+        cmds: ["ssh-keygen -R [hostname]"]
+      },
+      r_ssh_auth_limit: {
+        type: "fix",
+        title: "Too Many Authentication Failures",
+        steps: [
+          "SSH agent may be offering too many keys automatically",
+          "Specify the key explicitly: ssh -i /path/to/key -o IdentitiesOnly=yes user@host",
+          "Or temporarily clear the SSH agent: ssh-add -D",
+          "Check MaxAuthTries in /etc/ssh/sshd_config (default is 6)",
+          "If locked out: access via console and reset or raise MaxAuthTries temporarily"
+        ],
+        cmds: ["ssh -i ~/.ssh/id_rsa -o IdentitiesOnly=yes user@host", "ssh-add -D"]
+      },
+
+      // Web panel branch
+      q8: {
+        q: "What happens when attempting to log into the web admin panel?",
+        answers: [
+          { text: "Invalid credentials error", next: "r_web_creds" },
+          { text: "Page won't load / connection error", next: "r_web_down" },
+          { text: "Account locked or too many attempts", next: "r_web_locked" }
+        ]
+      },
+      r_web_creds: {
+        type: "fix",
+        title: "Web Admin Panel — Invalid Credentials",
+        steps: [
+          "Confirm you're using the correct admin username for the panel (often 'admin' or 'administrator')",
+          "Check if credentials are stored in a password manager or documentation",
+          "For IIS: uses Windows authentication — reset via AD or local user accounts",
+          "For cPanel/WHM: reset via SSH → whmapi1 changepasswd user=[user] password=[pass]",
+          "For custom apps: check the app's database or config file for credential reset procedure",
+          "Review admin panel logs for login attempt details"
+        ]
+      },
+      r_web_down: {
+        type: "fix",
+        title: "Web Admin Panel Not Loading",
+        steps: [
+          "Verify the web service is running: sudo systemctl status nginx / apache2 / iis",
+          "Check the panel's port is accessible (common ports: 8080, 8443, 2082, 2087)",
+          "Confirm firewall allows the panel's port inbound",
+          "Check SSL cert hasn't expired if using HTTPS",
+          "Review web server error logs: /var/log/nginx/error.log or Event Viewer for IIS",
+          "Restart the web service and retry"
+        ],
+        cmds: ["sudo systemctl status nginx", "sudo systemctl restart apache2"]
+      },
+      r_web_locked: {
+        type: "fix",
+        title: "Web Panel Account Locked Out",
+        steps: [
+          "Wait for the lockout period to expire (usually 15–30 min)",
+          "Access the server directly via SSH or console to manually unlock",
+          "For cPanel: use WHM to unlock the account",
+          "For custom apps: clear the failed attempts in the database or config",
+          "Whitelist your IP in the panel's security settings to prevent future lockouts",
+          "Consider enabling IP-based access restriction for the admin panel"
+        ]
+      },
+
+      // Local console branch
+      q_local: {
+        q: "Is this a Windows Server or Linux server?",
+        answers: [
+          { text: "Windows Server", next: "r_local_windows" },
+          { text: "Linux Server", next: "r_local_linux" }
+        ]
+      },
+      r_local_windows: {
+        type: "fix",
+        title: "Windows Server Local Console Login",
+        steps: [
+          "Confirm Caps Lock is off — passwords are case-sensitive",
+          "Try the built-in Administrator account if domain is unavailable",
+          "If account is locked: boot from Windows Server installation media",
+          "Use recovery console to reset Administrator password if needed",
+          "Check if the server is in Safe Mode (F8 on boot) — may limit available accounts",
+          "Review Event ID 4625 in Security logs for the exact failure reason"
+        ],
+        cmds: ["eventvwr.msc", "net user Administrator [newpassword]"]
+      },
+      r_local_linux: {
+        type: "fix",
+        title: "Linux Server Local Console Login",
+        steps: [
+          "Confirm username and password are correct — both are case-sensitive",
+          "If password unknown: reboot into recovery/single-user mode",
+          "At GRUB menu: press 'e', add 'single' or 'init=/bin/bash' to kernel line",
+          "In single-user shell: run passwd [username] to reset",
+          "Check if account is locked: passwd -S [username] (look for 'L' status)",
+          "Unlock with: passwd -u [username] or usermod -U [username]"
+        ],
+        cmds: ["passwd [username]", "passwd -S [username]", "usermod -U [username]"]
+      }
+    }
+  },
+
+  email: {
+    label: "📧 Email Issues",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "What is the nature of the email issue?",
+        answers: [
+          { text: "Can't send or receive emails", next: "q2" },
+          { text: "Outlook / mail client won't open or keeps crashing", next: "q_client" },
+          { text: "Not receiving specific emails (possible spam/filter)", next: "q_spam" },
+          { text: "Email is sending but getting bounce-back / NDR", next: "q_ndr" },
+          { text: "Password / can't log into webmail", next: "q_webmail" }
+        ]
+      },
+
+      // Send/receive
+      q2: {
+        q: "Is the issue affecting all users or just this one user?",
+        answers: [
+          { text: "All users are affected", next: "r_server_outage" },
+          { text: "Just this one user", next: "q3" }
+        ]
+      },
+      q3: {
+        q: "Is the user getting any specific error message?",
+        answers: [
+          { text: "Yes — error about server / connection", next: "q4" },
+          { text: "Yes — credentials / authentication error", next: "r_reauth" },
+          { text: "No error — emails just aren't arriving or sending", next: "q5" }
+        ]
+      },
+      q4: {
+        q: "What mail protocol / setup is the user on?",
+        detail: "Check account settings in Outlook: File → Account Settings → Account Settings → Email tab.",
+        answers: [
+          { text: "Microsoft 365 / Exchange", next: "r_exchange" },
+          { text: "IMAP / POP3 (e.g. Gmail, personal domain)", next: "r_imap" }
+        ]
+      },
+      q5: {
+        q: "Can the user access webmail (e.g. Outlook.com, Gmail, OWA) successfully?",
+        detail: "Try logging into the webmail portal directly in a browser to isolate the issue to the client vs. the account.",
+        answers: [
+          { text: "Yes — webmail works fine", next: "r_client_sync" },
+          { text: "No — webmail also not working", next: "r_account_issue" }
+        ]
+      },
+
+      // Client issues
+      q_client: {
+        q: "What happens when Outlook is launched?",
+        answers: [
+          { text: "Crashes immediately on open", next: "r_outlook_crash" },
+          { text: "Gets stuck on 'Loading Profile' or 'Processing'", next: "r_outlook_stuck" },
+          { text: "Opens but shows 'Disconnected' or 'Trying to connect'", next: "r_exchange" }
+        ]
+      },
+
+      // Spam / filter
+      q_spam: {
+        q: "Are the missing emails going to Junk/Spam folder?",
+        answers: [
+          { text: "Yes — found in Junk folder", next: "r_whitelist" },
+          { text: "No — not in Junk either", next: "r_mail_flow" }
+        ]
+      },
+
+      // NDR / bounce
+      q_ndr: {
+        q: "What does the bounce-back / NDR message say?",
+        answers: [
+          { text: "5.x.x — Recipient not found / mailbox full", next: "r_ndr_5xx" },
+          { text: "4.x.x — Temporary failure / try again later", next: "r_ndr_4xx" },
+          { text: "Blocked / blacklisted / spam rejection", next: "r_blacklist" }
+        ]
+      },
+
+      // Webmail login
+      q_webmail: {
+        q: "What happens when logging into webmail?",
+        answers: [
+          { text: "Wrong password / credentials rejected", next: "r_reset_email_pw" },
+          { text: "Account locked or MFA prompt failing", next: "r_mfa" },
+          { text: "Page loads but shows 'account disabled' or similar", next: "r_account_disabled" }
+        ]
+      },
+
+      // Resolutions
+      r_server_outage: {
+        type: "escalate",
+        title: "Mail Server / Service Outage",
+        steps: [
+          "Check Microsoft 365 Service Health dashboard (admin.microsoft.com) or your mail provider's status page",
+          "Verify multiple users are affected to confirm it's not isolated",
+          "Check if DNS/MX records are resolving correctly: nslookup -type=MX yourdomain.com",
+          "Review mail server logs if self-hosted (Exchange, Postfix, etc.)",
+          "If M365: open a support ticket with Microsoft via admin portal",
+          "Communicate downtime to affected users while investigating"
+        ],
+        cmds: ["nslookup -type=MX yourdomain.com", "Get-MessageTrackingLog (Exchange PowerShell)"]
+      },
+      r_reauth: {
+        type: "fix",
+        title: "Re-authenticate Email Account",
+        steps: [
+          "In Outlook: File → Account Settings → select account → Repair",
+          "Sign out and sign back in, especially if MFA / Modern Auth is enabled",
+          "If using app passwords (older setups): generate a new app password from the account portal",
+          "Remove and re-add the account in Outlook if repair doesn't work",
+          "Check if the user's password was recently changed — Outlook caches old credentials",
+          "Clear saved credentials: Control Panel → Credential Manager → remove mail entries"
+        ],
+        cmds: ["control keymgr.dll"]
+      },
+      r_exchange: {
+        type: "fix",
+        title: "Exchange / M365 Connection Issue",
+        steps: [
+          "Confirm the user's M365 license is active in admin.microsoft.com",
+          "Run the Microsoft Support and Recovery Assistant (SaRA) tool",
+          "Check Autodiscover is working: Test-EmailAutoConfiguration in Outlook (hold Ctrl + right-click tray icon)",
+          "Verify the user's account isn't blocked for sign-in in Azure AD",
+          "Check if Conditional Access policies are blocking the client",
+          "Try creating a new Outlook profile: Control Panel → Mail → Show Profiles"
+        ],
+        cmds: ["sara (Microsoft Support & Recovery Assistant)", "control mlcfg32.cpl"]
+      },
+      r_imap: {
+        type: "fix",
+        title: "IMAP / POP3 Connection Error",
+        steps: [
+          "Verify incoming/outgoing server settings match provider's documentation",
+          "Common IMAP ports: 993 (SSL) or 143. SMTP: 587 (TLS) or 465 (SSL)",
+          "Test port connectivity: Test-NetConnection -ComputerName mail.server.com -Port 993",
+          "Ensure 'Less secure app access' or App Passwords are configured if required",
+          "Check that the email provider hasn't deprecated basic auth (Google, Microsoft both have)",
+          "Re-enter credentials — avoid copy-paste (hidden characters can cause auth failures)"
+        ],
+        cmds: ["Test-NetConnection -ComputerName [mail server] -Port 993"]
+      },
+      r_client_sync: {
+        type: "fix",
+        title: "Outlook Not Syncing — Client Issue",
+        steps: [
+          "Check Outlook send/receive status bar at the bottom — look for 'Send/Receive Error'",
+          "Go to Send/Receive tab → Send/Receive All Folders (F9)",
+          "Check if Work Offline mode is on: Send/Receive tab → uncheck 'Work Offline'",
+          "Clear the Outlook cache: close Outlook, delete the .ost file, reopen (it will rebuild)",
+          ".ost location: C:\\Users\\[user]\\AppData\\Local\\Microsoft\\Outlook",
+          "If calendar/contacts only: check sync filters in account settings"
+        ],
+        cmds: ["%localappdata%\\Microsoft\\Outlook"]
+      },
+      r_account_issue: {
+        type: "escalate",
+        title: "Account-Level Email Problem",
+        steps: [
+          "Check the account status in Microsoft 365 Admin or your mail admin console",
+          "Verify the mailbox hasn't exceeded its storage quota",
+          "Confirm the account's email address and domain are correctly configured",
+          "Check if the account was recently migrated or renamed",
+          "Review mail flow rules that may be affecting the account",
+          "Escalate to mail admin with the user's email address and specific symptoms"
+        ]
+      },
+      r_outlook_crash: {
+        type: "fix",
+        title: "Outlook Crashes on Launch",
+        steps: [
+          "Start Outlook in Safe Mode: hold Ctrl while opening, or run: outlook.exe /safe",
+          "If Safe Mode works: disable add-ins one by one (File → Options → Add-ins → Manage COM Add-ins)",
+          "Repair Office: Control Panel → Programs → Microsoft 365 → Change → Quick Repair",
+          "If Quick Repair fails: try Online Repair (requires internet, more thorough)",
+          "Check Windows Event Viewer for the specific crash error code",
+          "As last resort: uninstall and reinstall Microsoft 365"
+        ],
+        cmds: ["outlook.exe /safe", "eventvwr.msc"]
+      },
+      r_outlook_stuck: {
+        type: "fix",
+        title: "Outlook Stuck on Loading Profile",
+        steps: [
+          "Wait 2–3 minutes — large mailboxes can take time on first load",
+          "Force-close Outlook (Task Manager) and reopen",
+          "Disable hardware graphics acceleration: File → Options → Advanced → uncheck 'Use hardware graphics acceleration'",
+          "Create a new Outlook profile: Control Panel → Mail → Show Profiles → Add",
+          "Set the new profile as default and test",
+          "If still stuck: rename or delete the old .ost file so it rebuilds fresh"
+        ],
+        cmds: ["control mlcfg32.cpl", "taskkill /f /im outlook.exe"]
+      },
+      r_whitelist: {
+        type: "fix",
+        title: "Email Going to Junk / Spam",
+        steps: [
+          "Right-click the email in Junk folder → Mark as Not Junk",
+          "Add the sender to Safe Senders list: Home → Junk → Junk Email Options → Safe Senders",
+          "For M365 org-wide: admin can whitelist the sender domain in the Exchange admin center",
+          "Check if a mail flow / transport rule is routing messages to junk",
+          "Review the email headers to see which spam filter flagged it and why",
+          "Ask sender to check their SPF, DKIM, and DMARC records if legitimate bulk mail"
+        ]
+      },
+      r_mail_flow: {
+        type: "escalate",
+        title: "Email Not Arriving — Mail Flow Issue",
+        steps: [
+          "Ask the sender to confirm the email was sent and check their Sent folder",
+          "Check M365 Message Trace: Exchange Admin Center → Mail Flow → Message Trace",
+          "Search by sender, recipient, and date range to find where the message went",
+          "Check for mail flow / transport rules that may be deleting or redirecting messages",
+          "Verify MX records are pointing to the correct mail server",
+          "Escalate to mail admin with Message Trace results"
+        ],
+        cmds: ["nslookup -type=MX yourdomain.com"]
+      },
+      r_ndr_5xx: {
+        type: "fix",
+        title: "NDR 5.x.x — Permanent Delivery Failure",
+        steps: [
+          "5.1.1 = recipient address not found — verify the email address is spelled correctly",
+          "5.2.2 = recipient mailbox full — recipient needs to clear space or admin increases quota",
+          "5.7.x = policy/permission issue — check if sending to external is blocked by mail policy",
+          "Forward the full NDR to the mail admin for review",
+          "Check if the recipient's domain has valid MX records",
+          "For internal recipients: verify the mailbox exists and is active in the admin console"
+        ]
+      },
+      r_ndr_4xx: {
+        type: "fix",
+        title: "NDR 4.x.x — Temporary Failure",
+        steps: [
+          "4.x.x errors are temporary — Outlook will retry automatically for 24–48 hours",
+          "Check the recipient's mail server isn't experiencing an outage",
+          "Verify your outbound mail server IP isn't on a temporary greylist",
+          "If sending to an external domain: confirm their MX records resolve correctly",
+          "If retries exhaust without success: contact the recipient through another channel",
+          "Escalate to mail admin if the issue persists beyond 2 hours"
+        ]
+      },
+      r_blacklist: {
+        type: "escalate",
+        title: "IP / Domain Blacklisted",
+        steps: [
+          "Check your sending IP at MXToolbox Blacklist Check: mxtoolbox.com/blacklists.aspx",
+          "Identify which blacklist flagged you and follow their delisting process",
+          "Common blacklists: Spamhaus, Barracuda, SORBS — each has a delisting request form",
+          "Investigate why the IP was blacklisted: compromised account, mail relay abuse, spam volume",
+          "Resolve the root cause BEFORE requesting delisting or you'll be re-listed",
+          "Escalate to mail/network admin immediately — this affects all outbound mail"
+        ]
+      },
+      r_reset_email_pw: {
+        type: "fix",
+        title: "Reset Email / Webmail Password",
+        steps: [
+          "For M365: admin resets via Microsoft 365 Admin Center → Users → Active Users → Reset password",
+          "For Google Workspace: Google Admin Console → Users → select user → Reset password",
+          "Self-service reset: direct user to account recovery page if enabled",
+          "After reset: user must update password in Outlook/mail client too",
+          "Clear saved credentials in Windows Credential Manager to avoid auth loops",
+          "If MFA is also misconfigured: admin may need to reset MFA methods alongside password"
+        ],
+        cmds: ["control keymgr.dll"]
+      },
+      r_mfa: {
+        type: "fix",
+        title: "MFA / Multi-Factor Auth Issue",
+        steps: [
+          "Confirm user's authenticator app is installed and account is registered",
+          "Check if the user's phone time is synced (TOTP codes are time-sensitive)",
+          "If user lost access to MFA device: admin must reset MFA in Azure AD / admin console",
+          "M365: Azure AD → Users → select user → Authentication Methods → remove old MFA",
+          "Re-register MFA: send user to aka.ms/mfasetup",
+          "Consider temporarily disabling MFA for account recovery, then re-enable immediately"
+        ]
+      },
+      r_account_disabled: {
+        type: "escalate",
+        title: "Email Account Disabled",
+        steps: [
+          "Check account status in M365 Admin or Google Admin — look for 'Blocked' or 'Disabled'",
+          "Common causes: security alert, license removal, offboarding process, or admin action",
+          "If security-triggered: review the security alert before re-enabling",
+          "Re-enable via admin console and assign the correct license",
+          "Check if the account's license was removed (unlicensed accounts lose mailbox access)",
+          "Document the incident and reason for re-enabling in the ticket"
+        ]
+      }
+    }
+  },
+
+  login: {
+    label: "🔐 Can't Log In",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "What error or symptom does the user see when logging in?",
+        answers: [
+          { text: "Wrong password / account locked", next: "q2" },
+          { text: "Profile loads then immediately logs out", next: "r_corrupt_profile" },
+          { text: "Stuck on 'Please wait...' or spinning circle", next: "r_stuck_loading" },
+          { text: "Domain error / can't contact domain", next: "r_domain" }
+        ]
+      },
+      q2: {
+        q: "Is the user's Caps Lock on, or could they be mistyping?",
+        detail: "Always check the basics first. Also confirm they're using the correct username/domain.",
+        answers: [
+          { text: "No — they're typing it correctly", next: "q3" },
+          { text: "Yes — Caps Lock was the issue", next: "r_fixed_caps" }
+        ]
+      },
+      q3: {
+        q: "Has the user's password recently expired or been changed?",
+        answers: [
+          { text: "Yes — password expired", next: "r_reset_password" },
+          { text: "No — password should still work", next: "r_account_locked" }
+        ]
+      },
+      r_fixed_caps: {
+        type: "fix",
+        title: "Caps Lock — Resolved",
+        steps: [
+          "Confirm Caps Lock is off",
+          "Have user retype credentials carefully",
+          "Remind user that passwords are case-sensitive",
+          "Log successful login and close ticket"
+        ]
+      },
+      r_reset_password: {
+        type: "fix",
+        title: "Reset Expired Password",
+        steps: [
+          "Admin: reset password in Active Directory Users & Computers (ADUC)",
+          "Uncheck 'User must change password at next logon' if needed",
+          "Or check it if policy requires user to set their own",
+          "Provide temporary password securely (not in email plain text)",
+          "Have user log in and set a new password immediately",
+          "Document the reset in the ticket"
+        ],
+        cmds: ["dsa.msc"]
+      },
+      r_account_locked: {
+        type: "fix",
+        title: "Unlock User Account",
+        steps: [
+          "Open Active Directory Users & Computers (dsa.msc)",
+          "Find the user account → right-click → Properties → Account tab",
+          "Check 'Unlock account' checkbox → Apply",
+          "Also review the 'Account locked out' reason in Event Viewer",
+          "If repeatedly locking: check for old password saved on phone or other device",
+          "Reset password if source of lockouts can't be found"
+        ],
+        cmds: ["dsa.msc", "eventvwr.msc"]
+      },
+      r_corrupt_profile: {
+        type: "escalate",
+        title: "Corrupt User Profile",
+        steps: [
+          "Log in as a local administrator account",
+          "Create a new local user profile as a test",
+          "If new profile works: copy user data from old profile folder",
+          "Old profile location: C:\\Users\\[username]",
+          "For domain users: delete the profile from System → Advanced → User Profiles",
+          "Let it rebuild on next login — escalate if data recovery needed"
+        ],
+        cmds: ["sysdm.cpl"]
+      },
+      r_stuck_loading: {
+        type: "fix",
+        title: "Stuck on Loading / Please Wait",
+        steps: [
+          "Wait 5 minutes — Group Policy or updates may be applying",
+          "If still stuck: hard reboot (hold power button)",
+          "On next boot: try logging in with Shift+F8 to enter Safe Mode",
+          "In Safe Mode, run: sfc /scannow to check for file corruption",
+          "Check Windows Update — pending update may be blocking login",
+          "If recurring: escalate for profile repair or OS repair"
+        ],
+        cmds: ["sfc /scannow"]
+      },
+      r_domain: {
+        type: "escalate",
+        title: "Domain / Authentication Server Issue",
+        steps: [
+          "Check if other users on the same machine or network have the same issue",
+          "Try logging in with a cached domain credential (disconnect Ethernet, try login)",
+          "Check if the computer's time is synced — Kerberos requires time within 5 min",
+          "Run: nltest /dsgetdc:[domain] to check domain controller connectivity",
+          "If machine is off the network or domain trust broken: escalate to sysadmin"
+        ],
+        cmds: ["nltest /dsgetdc:[domain]", "w32tm /query /status"]
+      }
+    }
+  },
+
+  macos: {
+    label: "🍎 macOS Issues",
+    start: "q1",
+    nodes: {
+      q1: {
+        q: "What type of macOS issue are you experiencing?",
+        answers: [
+          { text: "No internet / Wi-Fi problems", next: "q_net" },
+          { text: "Mac is slow or unresponsive", next: "q_slow" },
+          { text: "Can't log in / account issues", next: "q_login" },
+          { text: "App crashing or won't open", next: "q_app" },
+          { text: "Display, audio, or peripheral not working", next: "q_hw" }
+        ]
+      },
+
+      // Network
+      q_net: {
+        q: "What is the Wi-Fi/network symptom?",
+        answers: [
+          { text: "Wi-Fi connects but no internet", next: "r_mac_dns" },
+          { text: "Can't connect to Wi-Fi network", next: "r_mac_wifi" },
+          { text: "Wi-Fi keeps dropping", next: "r_mac_wifi_drop" }
+        ]
+      },
+      r_mac_dns: {
+        type: "fix",
+        title: "macOS — Connected but No Internet",
+        steps: [
+          "Open Terminal and run: ping 8.8.8.8 — if it works, it's a DNS issue",
+          "Go to System Settings → Wi-Fi → Details → DNS tab",
+          "Remove existing DNS entries and add 8.8.8.8 and 8.8.4.4",
+          "Run: sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder",
+          "If ping 8.8.8.8 also fails: renew DHCP lease under TCP/IP tab → Renew DHCP Lease",
+          "If still failing: delete the network location and re-add it"
+        ],
+        cmds: ["ping 8.8.8.8", "sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder"]
+      },
+      r_mac_wifi: {
+        type: "fix",
+        title: "macOS — Can't Connect to Wi-Fi",
+        steps: [
+          "Turn Wi-Fi off and on via the menu bar icon",
+          "Forget the network: System Settings → Wi-Fi → Details → Forget This Network",
+          "Reconnect and re-enter the password",
+          "Delete Wi-Fi preferences: remove files in /Library/Preferences/SystemConfiguration/ (plist files)",
+          "In Terminal: sudo rm /Library/Preferences/SystemConfiguration/com.apple.wifi.message-tracer.plist",
+          "Restart and reconnect — macOS will rebuild the preference files"
+        ],
+        cmds: ["sudo rm /Library/Preferences/SystemConfiguration/com.apple.wifi.message-tracer.plist"]
+      },
+      r_mac_wifi_drop: {
+        type: "fix",
+        title: "macOS — Wi-Fi Keeps Dropping",
+        steps: [
+          "Check for interference: move closer to the router or switch to 5GHz band",
+          "Disable 'Ask to join networks' and 'Auto-join' for nearby weak networks",
+          "Reset network settings: delete files in /Library/Preferences/SystemConfiguration/",
+          "Update macOS — Wi-Fi drops are often fixed in point releases",
+          "Check Activity Monitor for apps using heavy network traffic causing drops",
+          "If on laptop: disable Power Nap under System Settings → Battery → Options"
+        ],
+        cmds: ["networksetup -setairportpower en0 off && networksetup -setairportpower en0 on"]
+      },
+
+      // Slow
+      q_slow: {
+        q: "When does the Mac feel slow?",
+        answers: [
+          { text: "Slow right after startup / login", next: "r_mac_startup" },
+          { text: "Slows down after a while of use", next: "r_mac_ram" },
+          { text: "Specific app is slow or spinning beachball", next: "r_mac_app_slow" }
+        ]
+      },
+      r_mac_startup: {
+        type: "fix",
+        title: "macOS — Slow Startup",
+        steps: [
+          "Remove unnecessary login items: System Settings → General → Login Items",
+          "Toggle off all non-essential apps from opening at login",
+          "Run Disk First Aid: open Disk Utility → select your drive → First Aid",
+          "Check if a macOS update is pending — updates download in the background and slow boot",
+          "Run: sudo periodic daily weekly monthly in Terminal to clear system caches",
+          "If FileVault is on and recently enabled, encryption may still be in progress"
+        ],
+        cmds: ["sudo periodic daily weekly monthly", "diskutil list"]
+      },
+      r_mac_ram: {
+        type: "fix",
+        title: "macOS — Slowdown After Use / High Memory",
+        steps: [
+          "Open Activity Monitor (Cmd+Space → Activity Monitor) → Memory tab",
+          "Check 'Memory Pressure' graph — if red, RAM is being heavily paged",
+          "Sort by Memory and quit any apps consuming excessive RAM",
+          "Purge RAM cache in Terminal: sudo purge (temporary relief only)",
+          "Check for runaway processes: sort by CPU% and kill stuck processes",
+          "If persistent: consider upgrading RAM (non-Apple Silicon Macs) or reducing open apps"
+        ],
+        cmds: ["sudo purge", "top -o mem"]
+      },
+      r_mac_app_slow: {
+        type: "fix",
+        title: "macOS — App Slow / Spinning Beachball",
+        steps: [
+          "Force quit the app: Cmd+Option+Esc → select the app → Force Quit",
+          "Reopen the app and test — one-off hangs are common",
+          "Delete the app's preference file: ~/Library/Preferences/com.[appname].plist",
+          "Check if the app needs an update — open App Store → Updates",
+          "Run: sudo log collect --last 5m in Terminal to check for crash logs",
+          "Uninstall and reinstall the app if the issue persists"
+        ],
+        cmds: ["killall [AppName]", "open ~/Library/Preferences"]
+      },
+
+      // Login
+      q_login: {
+        q: "What is the login issue?",
+        answers: [
+          { text: "Forgot password / can't log into account", next: "r_mac_pw" },
+          { text: "Account is locked or disabled", next: "r_mac_locked" },
+          { text: "Mac boots to a lock screen with no password accepted", next: "r_mac_firmware" },
+          { text: "Can't log into iCloud / Apple ID", next: "r_mac_appleid" }
+        ]
+      },
+      r_mac_pw: {
+        type: "fix",
+        title: "macOS — Forgot Login Password",
+        steps: [
+          "Restart and hold Cmd+R to boot into macOS Recovery",
+          "Open Terminal from the Utilities menu",
+          "Run: resetpassword to open the password reset utility",
+          "Select the volume, then the user account, and set a new password",
+          "If FileVault is enabled: you must use the FileVault recovery key or iCloud to unlock first",
+          "For Apple Silicon Macs: hold Power button until 'Loading startup options' appears, then go to Options"
+        ],
+        cmds: ["resetpassword (in Recovery Terminal)"]
+      },
+      r_mac_locked: {
+        type: "fix",
+        title: "macOS — Account Locked",
+        steps: [
+          "Wait a few minutes after failed login attempts — macOS auto-locks after repeated failures",
+          "Try the hint or use a different admin account on the same Mac to reset the password",
+          "Admin account: System Settings → Users & Groups → select user → Reset Password",
+          "If no other admin account: boot into Recovery Mode and use resetpassword utility",
+          "For MDM-managed Macs (corporate): contact your IT admin to unlock via MDM console",
+          "Check if Apple ID is linked — macOS may offer to reset via Apple ID on the login screen"
+        ]
+      },
+      r_mac_firmware: {
+        type: "escalate",
+        title: "macOS — Firmware / Activation Lock",
+        steps: [
+          "This usually means Activation Lock is enabled via Find My Mac",
+          "The owner's Apple ID and password is required to disable it",
+          "For corporate Macs: check if the device is enrolled in Apple Business Manager (ABM)",
+          "ABM-enrolled devices can be released by the org admin at appleid.apple.com or ABM portal",
+          "For personal devices: the original Apple ID owner must sign in or remotely remove the lock",
+          "Escalate to IT admin or Apple Support with proof of ownership"
+        ]
+      },
+      r_mac_appleid: {
+        type: "fix",
+        title: "macOS — Apple ID / iCloud Login Issues",
+        steps: [
+          "Check Apple's system status page: apple.com/support/systemstatus",
+          "Sign out of iCloud: System Settings → [Your Name] → Sign Out, then sign back in",
+          "If Two-Factor Auth is failing: generate a code on another trusted device",
+          "Reset Apple ID password at: iforgot.apple.com",
+          "Check for account flags: visit appleid.apple.com and review security settings",
+          "If account is locked by Apple: follow the account recovery steps at iforgot.apple.com"
+        ],
+        cmds: ["open https://iforgot.apple.com"]
+      },
+
+      // App issues
+      q_app: {
+        q: "What happens with the app?",
+        answers: [
+          { text: "App crashes immediately on open", next: "r_mac_crash" },
+          { text: "App won't open at all / bounces in Dock", next: "r_mac_wont_open" },
+          { text: "App is blocked by Gatekeeper / 'unidentified developer'", next: "r_mac_gatekeeper" }
+        ]
+      },
+      r_mac_crash: {
+        type: "fix",
+        title: "macOS — App Crashes on Launch",
+        steps: [
+          "Check Console app for crash reports: open Console → Crash Reports → find the app",
+          "Delete the app's preferences: ~/Library/Preferences/com.[appname].plist",
+          "Delete app cache: ~/Library/Caches/[appname]",
+          "Check if macOS version is compatible with the app — older apps may break after OS updates",
+          "Reinstall the app: drag to Trash, empty trash, reinstall from App Store or vendor",
+          "If crash log shows a library error: the app may need Rosetta — install via Terminal: softwareupdate --install-rosetta"
+        ],
+        cmds: ["softwareupdate --install-rosetta", "open ~/Library/Preferences"]
+      },
+      r_mac_wont_open: {
+        type: "fix",
+        title: "macOS — App Won't Open",
+        steps: [
+          "Right-click the app icon → Open (bypasses some security checks)",
+          "Check if the app is already running: Cmd+Tab or Activity Monitor",
+          "Force quit any stuck instance: Cmd+Option+Esc",
+          "Check disk space: Apple menu → About This Mac → Storage (need at least 1–2 GB free)",
+          "Repair disk permissions with Disk Utility → First Aid on the system volume",
+          "If recently updated macOS: the app may need an update from the developer"
+        ],
+        cmds: ["killall [AppName]", "df -h"]
+      },
+      r_mac_gatekeeper: {
+        type: "fix",
+        title: "macOS — Gatekeeper / Unidentified Developer Block",
+        steps: [
+          "Right-click (or Ctrl+click) the app → Open → click Open in the dialog",
+          "If that doesn't work: System Settings → Privacy & Security → scroll down to find the blocked app → Open Anyway",
+          "For CLI tools: sudo spctl --master-disable temporarily disables Gatekeeper (re-enable after)",
+          "Verify the app is from a trusted source before bypassing Gatekeeper",
+          "Check if a signed/notarized version is available from the developer's website",
+          "Re-enable Gatekeeper after: sudo spctl --master-enable"
+        ],
+        cmds: ["sudo spctl --master-disable", "sudo spctl --master-enable"]
+      },
+
+      // Hardware / peripherals
+      q_hw: {
+        q: "Which hardware issue are you experiencing?",
+        answers: [
+          { text: "External display not detected or wrong resolution", next: "r_mac_display" },
+          { text: "Audio not working (no sound or wrong output)", next: "r_mac_audio" },
+          { text: "USB / external device not recognized", next: "r_mac_usb" },
+          { text: "Bluetooth device won't connect", next: "r_mac_bt" }
+        ]
+      },
+      r_mac_display: {
+        type: "fix",
+        title: "macOS — External Display Issues",
+        steps: [
+          "Disconnect and reconnect the cable — try a different port or adapter",
+          "Hold Option and click Displays in menu bar → Detect Displays",
+          "Go to System Settings → Displays and check if the external screen appears",
+          "Reset display preferences: delete ~/Library/Preferences/com.apple.windowserver.plist and restart",
+          "Try a different cable or adapter — USB-C/Thunderbolt adapters vary in quality",
+          "If wrong resolution: System Settings → Displays → select display → choose Scaled → pick correct resolution"
+        ],
+        cmds: ["sudo rm ~/Library/Preferences/com.apple.windowserver.plist"]
+      },
+      r_mac_audio: {
+        type: "fix",
+        title: "macOS — Audio Not Working",
+        steps: [
+          "Check the output device: System Settings → Sound → Output — ensure correct device is selected",
+          "If output shows 'Internal Speakers' but no sound: check mute and volume slider",
+          "Restart Core Audio daemon: sudo killall coreaudiod",
+          "Unplug and replug headphones if macOS is stuck on headphone output",
+          "Reset NVRAM (Intel Macs): restart and hold Cmd+Option+P+R until you hear two startup chimes",
+          "For Apple Silicon: NVRAM resets automatically — restart the Mac"
+        ],
+        cmds: ["sudo killall coreaudiod"]
+      },
+      r_mac_usb: {
+        type: "fix",
+        title: "macOS — USB / External Device Not Recognized",
+        steps: [
+          "Try a different USB port or hub — some ports may be underpowered",
+          "Check System Information: Apple menu → About This Mac → System Report → USB — see if device appears",
+          "Reset the SMC (Intel Macs): shut down, hold Shift+Ctrl+Option+Power for 10 sec, release, power on",
+          "For Apple Silicon: SMC is reset automatically on shutdown — just restart",
+          "Check if the device needs a driver — visit the manufacturer's site for macOS drivers",
+          "Try the device on another Mac to rule out hardware failure"
+        ],
+        cmds: ["system_profiler SPUSBDataType"]
+      },
+      r_mac_bt: {
+        type: "fix",
+        title: "macOS — Bluetooth Device Won't Connect",
+        steps: [
+          "Toggle Bluetooth off and on from the menu bar or System Settings → Bluetooth",
+          "Remove the device and re-pair: click the X next to the device name → Forget → pair again",
+          "Reset Bluetooth module: hold Shift+Option and click Bluetooth menu bar icon → Reset the Bluetooth module",
+          "Delete Bluetooth preferences: sudo rm /Library/Preferences/com.apple.Bluetooth.plist and restart",
+          "Check for interference from other 2.4GHz devices (microwaves, other BT devices)",
+          "If multiple devices compete: disconnect others first, then pair one at a time"
+        ],
+        cmds: ["sudo rm /Library/Preferences/com.apple.Bluetooth.plist"]
+      }
+    }
+  }
+};
+
+// state
+let currentTree = null;
+let currentNode = null;
+let history = [];
+let trailSteps = [];
+
+function getNode() {
+  return trees[currentTree].nodes[currentNode];
+}
+
+// breadcrumb bar above each card
+function buildTrail() {
+  if (!trailSteps.length) return '';
+  const label = trees[currentTree].label.slice(trees[currentTree].label.indexOf(' ') + 1);
+  const items = trailSteps.map(t => {
+    const short = t.length > 30 ? t.slice(0, 30) + '\u2026' : t;
+    return `<span class="trail-item">${short}</span>`;
+  }).join('');
+  return `<div class="trail"><span class="trail-item">${label}</span>${items}</div>`;
+}
+
+// nav buttons shown on every screen
+function buildControls() {
+  const backBtn = history.length ? `<button class="ctrl-btn back" onclick="goBack()">\u2190 Back</button>` : '';
+  return `
+    <div class="controls">
+      <button class="ctrl-btn restart" onclick="restart()">\u21BA Start Over</button>
+      ${backBtn}
+      <button class="ctrl-btn back" onclick="goHome()">&#8962; All Issues</button>
+      <button class="ctrl-btn ticket" onclick="openTicketModal()">&#127903; Submit Ticket</button>
+    </div>`;
+}
+
+function render() {
+  const app = el('app');
+
+  // home screen
+  if (!currentTree) {
+    const categoryBtns = Object.entries(trees).map(([key, tree]) => {
+      const icon = tree.label.split(' ')[0];
+      const name = tree.label.slice(tree.label.indexOf(' ') + 1);
+      return `<button class="cat-btn" onclick="startTree('${key}')">
+        <span class="cat-icon">${icon}</span>
+        <span>${name}</span>
+      </button>`;
+    }).join('');
+
+    app.innerHTML = `
+      <div class="home-label">// SELECT AN ISSUE</div>
+      <div class="category-grid">${categoryBtns}</div>
+      <div style="display:flex; justify-content:flex-end; margin-top:8px">
+        <button class="ctrl-btn ticket" onclick="openTicketModal()" style="margin-left:0">&#127903; Submit Ticket</button>
+      </div>`;
+    return;
+  }
+
+  const node = getNode();
+
+  // resolution screen
+  if (currentNode && node.type) {
+    const isEscalate = node.type === 'escalate';
+    const badgeClass = isEscalate ? 'esc' : 'fix';
+    const badgeText = isEscalate ? '\u26A0 Escalate' : '\u2713 Resolution Found';
+
+    const stepItems = node.steps.map((step, i) =>
+      `<li><span class="step-num">${i + 1}</span><span>${step}</span></li>`
+    ).join('');
+
+    const cmdBlock = node.cmds
+      ? `<div class="cmd-block">${node.cmds.map(c => `<div class="cmd-line">${c}</div>`).join('')}</div>`
+      : '';
+
+    app.innerHTML = `
+      ${buildTrail()}
+      <div class="resolution ${isEscalate ? 'escalate' : 'success'}">
+        <div class="res-badge ${badgeClass}">${badgeText}</div>
+        <div class="res-title">${node.title}</div>
+        <ul class="steps-list">${stepItems}</ul>
+        ${cmdBlock}
+        ${buildControls()}
+      </div>`;
+    return;
+  }
+
+  // question screen
+  const answerBtns = node.answers.map(a => {
+    const safeText = a.text.replace(/'/g, "\'");
+    return `<button class="ans-btn" onclick="answer('${a.next}', '${safeText}')">
+      <span>${a.text}</span>
+      <span class="ans-arrow" style="margin-left:auto">\u2192</span>
+    </button>`;
+  }).join('');
+
+  app.innerHTML = `
+    ${buildTrail()}
+    <div class="card">
+      <div class="step-label">// DIAGNOSTIC STEP ${history.length + 1}</div>
+      <div class="question">${node.q}</div>
+      ${node.detail ? `<div class="detail">${node.detail}</div>` : ''}
+      <div class="answers">${answerBtns}</div>
+      ${buildControls()}
+    </div>`;
+}
+
+function openTicketModal() {
+  el('ticket-modal').style.display = 'flex';
+
+  // map tree keys to readable category names
+  const categoryMap = {
+    internet: 'No Internet',
+    slow: 'Slow Computer',
+    printer: 'Printer Issues',
+    email: 'Email Issues',
+    server: 'Server Login',
+    login: 'User Login',
+    macos: 'macOS Issues'
+  };
+
+  el('modal-body').innerHTML = `
+    <div class="field-row">
+      <div class="field">
+        <label>Your Name</label>
+        <input type="text" id="t-name" placeholder="First Last" />
+      </div>
+      <div class="field">
+        <label>User Email</label>
+        <input type="email" id="t-email" placeholder="user@company.com" />
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Issue Category</label>
+        <select id="t-category">
+          <option>No Internet</option>
+          <option>Slow Computer</option>
+          <option>Printer Issues</option>
+          <option>Email Issues</option>
+          <option>Server Login</option>
+          <option>User Login</option>
+          <option>macOS Issues</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select id="t-priority">
+          <option value="Low">Low - Minor inconvenience</option>
+          <option value="Medium" selected>Medium - Work impacted</option>
+          <option value="High">High - Fully blocked</option>
+          <option value="Critical">Critical - Multiple users</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Issue Summary</label>
+      <input type="text" id="t-summary" placeholder="Brief description of the problem..." />
+    </div>
+    <div class="field">
+      <label>Steps Already Tried</label>
+      <textarea id="t-steps" placeholder="What has been attempted so far?"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="cancel-btn" onclick="closeTicketModal()">Cancel</button>
+      <button class="submit-btn" onclick="submitTicket()">Submit Ticket</button>
+    </div>`;
+
+  // pre-fill category if we're already in a tree
+  const catSelect = el('t-category');
+  if (catSelect && currentTree && categoryMap[currentTree]) {
+    catSelect.value = categoryMap[currentTree];
+  }
+
+  // pre-fill steps from the diagnostic trail
+  const stepsField = el('t-steps');
+  if (stepsField && trailSteps.length > 0) {
+    stepsField.value = trailSteps.map((step, i) => `${i + 1}. ${step}`).join('\n');
+  }
+}
+
+function submitTicket() {
+  const name     = (el('t-name')?.value || '').trim();
+  const email    = (el('t-email')?.value || '').trim();
+  const category = el('t-category')?.value || 'Other';
+  const priority = el('t-priority')?.value || 'Medium';
+  const summary  = (el('t-summary')?.value || '').trim();
+  const steps    = (el('t-steps')?.value || '').trim();
+
+  if (!name || !summary) {
+    const missing = [!name && 'Name', !summary && 'Issue Summary'].filter(Boolean);
+    alert('Please fill in: ' + missing.join(', '));
+    return;
+  }
+
+  const ticketId = 'TKT-' + Date.now().toString().slice(-6);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+  el('modal-body').innerHTML = `
+    <div class="ticket-success">
+      <div class="ticket-icon">\u2705</div>
+      <div class="ticket-id">${ticketId}</div>
+      <div class="ticket-msg">Ticket logged. A technician will follow up shortly.</div>
+      <div class="ticket-summary-box">
+        TICKET_ID: <span>${ticketId}</span><br>
+        DATE:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>${dateStr} ${timeStr}</span><br>
+        NAME:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>${name}</span><br>
+        ${email ? 'EMAIL:&nbsp;&nbsp;&nbsp;&nbsp;<span>' + email + '</span><br>' : ''}
+        CATEGORY:&nbsp;<span>${category}</span><br>
+        PRIORITY:&nbsp;<span>${priority}</span><br>
+        SUMMARY:&nbsp;&nbsp;<span>${summary}</span><br>
+        ${steps ? 'TRIED:&nbsp;&nbsp;&nbsp;&nbsp;<span>' + steps.replace(/\n/g, ' | ') + '</span>' : ''}
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="submit-btn" style="max-width:200px" onclick="closeTicketModal()">Done</button>
+      </div>
+    </div>`;
+}
+
+function closeTicketModal() {
+  el('ticket-modal').style.display = 'none';
+}
+
+function closeModalOutside(e) {
+  if (e.target.id === 'ticket-modal') closeTicketModal();
+}
+
+function startTree(key) {
+  currentTree = key;
+  currentNode = trees[key].start;
+  history = [];
+  trailSteps = [];
+  render();
+}
+
+function answer(nextNode, label) {
+  history.push({ node: currentNode, trail: [...trailSteps] });
+  trailSteps.push(label);
+  currentNode = nextNode;
+  render();
+}
+
+function goBack() {
+  const prev = history.pop();
+  currentNode = prev.node;
+  trailSteps = prev.trail;
+  render();
+}
+
+function restart() {
+  currentNode = trees[currentTree].start;
+  history = [];
+  trailSteps = [];
+  render();
+}
+
+function goHome() {
+  currentTree = null;
+  currentNode = null;
+  history = [];
+  trailSteps = [];
+  render();
+}
+
+render();
+
+</script>
+</body>
+</html>
